@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -25,6 +26,8 @@ public class Node : MonoBehaviour, IVertex<Node, Vector2>,
     }
 
     [SerializeField] private List<NodeArrow> nodeArrows;
+    [SerializeField] private int nodeValue;
+    [SerializeField] private TextMeshProUGUI valueText;
 
     private Animator animator;
     private Dictionary<Node, Vector2> neighbours = new();
@@ -33,12 +36,22 @@ public class Node : MonoBehaviour, IVertex<Node, Vector2>,
 
     public NodeEvents Events;
     public Node Previous;
-    public int Value;
+    public int Value
+    {
+        get { return nodeValue; } 
+        set 
+        {
+            nodeValue = value;
+            valueText.text = nodeValue.ToString();
+        }
+    }
     
     public void Start()
     {
         animator = GetComponentInParent<Animator>();
         Previous = null;
+
+        Value = nodeValue;
         
         foreach(var arrow in nodeArrows)
         {

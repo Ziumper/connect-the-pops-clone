@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DirectedGraph : IDirectedGraph<Node,Vector2>
+public class DirectedGraph : IDirectedGraph<Node, Vector2>
 {
     public DirectedGraph()
     {
@@ -71,5 +71,15 @@ public class DirectedGraph : IDirectedGraph<Node,Vector2>
         {
             start.RemoveEdge(end);
         }
+    }
+
+    public void RemoveNode(Node node)
+    {
+        foreach(var vertex in vertices)
+        {
+            vertex.RemoveEdge(node);
+        }
+
+        vertices.Remove(node);
     }
 }

@@ -256,6 +256,8 @@ MonoBehaviour:
     Direction: {x: 0, y: 1}
   - Image: {fileID: 133878056991006945}
     Direction: {x: -1, y: 1}
+  nodeValue: 2
+  valueText: {fileID: 957029491734533972}
   Events:
     OnNodeDown:
       m_PersistentCalls:
@@ -270,7 +272,6 @@ MonoBehaviour:
       m_PersistentCalls:
         m_Calls: []
   Previous: {fileID: 0}
-  Value: 2
 --- !u!1 &2729424387444581360
 GameObject:
   m_ObjectHideFlags: 0

@@ -133,16 +133,33 @@ public class GameManager : MonoBehaviour
         if(state.First != null)
         {
             if (settings.Debug) { Debug.Log("Node has been up, stop checking!", node); }
-            state.First = null;
-            state.Current = null;
-            state.Previous = null;
             
             foreach(var enteredNode in entered)
             {
                 enteredNode.ScaleDown();
-                enteredNode.HideAllArrows();   
+                enteredNode.HideAllArrows();
             }
-            
+
+            //if at least two let's change the value of the first, destroy rest and spawn next ones 
+            if(entered.Count > 1)
+            {
+                var entered = this.entered.ToArray();
+                for(int i = 1; i < entered.Length; i++)
+                {
+                    var enteredNode = entered[i];
+
+                    //add value for nodes
+                    state.First.Value += enteredNode.Value;
+                    
+                    graph.RemoveNode(enteredNode);
+                    Destroy(enteredNode.gameObject);
+                }
+            }
+
+            state.First = null;
+            state.Current = null;
+            state.Previous = null;
+
             entered.Clear();
             UpdateSelected();
         }

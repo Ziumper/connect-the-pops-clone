@@ -7,5 +7,6 @@
     /// <param name="first"></param>
     /// <param name="second"></param>
     public void AddEdge(TNode start, TNode end, TDirection direction);
+    public void RemoveNode(TNode node);
     public int Size { get; }
 }
