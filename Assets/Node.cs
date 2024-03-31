@@ -18,6 +18,7 @@ public class Node : MonoBehaviour, IVertex<Node, Vector2>,
     }
 
     public NodeEvents Events;
+    public Node Previous;
     public int Value;
 
     private Animator animator;
@@ -26,8 +27,8 @@ public class Node : MonoBehaviour, IVertex<Node, Vector2>,
     
     public void Start()
     {
-        neighbours = new ();
         animator = GetComponent<Animator>();
+        Previous = null;
     }
 
     public void OnPointerDown(PointerEventData eventData)

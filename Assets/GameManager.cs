@@ -28,8 +28,9 @@ public class GameManager : MonoBehaviour
         public List<Node> Spawned;
         public List<Node> Selected;
         public int SelectedResult;
-        public Node FirstSelectedNode;
-        public Node CurrentlySelectedNode;
+        public Node First;
+        public Node Current;
+        public Node Previous;
     }
 
     [Serializable]
@@ -38,7 +39,7 @@ public class GameManager : MonoBehaviour
         public UnityEvent<int> OnSelectedResultUpdate;
     }
     
-    [SerializeField] private GameState gameState;
+    [SerializeField] private GameState state;
     [SerializeField] private Settings settings;
     [SerializeField] private GameManagerEvents events;
 
@@ -49,7 +50,6 @@ public class GameManager : MonoBehaviour
     {
         entered = new HashSet<Node>();
         graph = new DirectedGraph();
-
         
         Node[][] grid = new Node[settings.Rows.Count][];
         
@@ -72,13 +72,13 @@ public class GameManager : MonoBehaviour
                 node.Events.OnNodeExit.AddListener(OnNodeExit);
 
                 //add it to the spawned list
-                gameState.Spawned.Add(node);
+                state.Spawned.Add(node);
                 grid[row][column] = node;               
             }
         }
 
 
-        //here all needed nodes were created so we can start with checking and adding neighbours
+        //here all needed nodes have been created so we can start with checking and adding neighbours
         //handle adding neighbours
         /**
          *  it goes like this where x is a center point node
@@ -116,11 +116,11 @@ public class GameManager : MonoBehaviour
 
     private void OnNodeDown(Node node)
     {
-        if(gameState.FirstSelectedNode == null)
+        if(state.First == null)
         {
             if (settings.Debug) { Debug.Log("Node has been down let's do it!", node); }
-            gameState.FirstSelectedNode = node;
-            gameState.CurrentlySelectedNode = node;
+            state.First = node;
+            state.Current = node;
             node.ScaleUp();
             entered.Add(node);
             UpdateSelected();
@@ -129,10 +129,12 @@ public class GameManager : MonoBehaviour
 
     private void OnNodeUp(Node node)
     {
-        if(gameState.FirstSelectedNode != null)
+        if(state.First != null)
         {
             if (settings.Debug) { Debug.Log("Node has been up, stop checking!", node); }
-            gameState.FirstSelectedNode = null;
+            state.First = null;
+            state.Current = null;
+            state.Previous = null;
             
             foreach(var enteredNode in entered)
             {
@@ -146,51 +148,59 @@ public class GameManager : MonoBehaviour
 
     private void OnNodeEnter(Node node)
     {
-        if(gameState.FirstSelectedNode != null)
-        {   
+        if (state.First != null)
+        {
             if (settings.Debug) { Debug.Log("Node entered add it to queue"); }
-            
-            if(gameState.CurrentlySelectedNode == null)
-            {
-                node.ScaleUp();
-                entered.Add(node);
-            } else if (gameState.CurrentlySelectedNode.IsNeighbour(node))
-            {
-                gameState.CurrentlySelectedNode = node;
-            }
 
-            UpdateSelected();
-            node.ScaleUp();
-            entered.Add(node);
+            //switch currently selected node if it's neighbour
+            if (state.Current.IsNeighbour(node))
+            {
+                //when coming to entered previous one remove selected from entered ones!
+                if (entered.TryGetValue(node, out var enteredNode)) //is inside entered nodes
+                {
+                    if(node != state.Current && state.Current.Previous == node) //the same as the one that we were coming from
+                    {
+                        state.Current.ScaleDown();
+                        entered.Remove(state.Current);
+                       
+                        UpdateSelected();
+                        
+                        state.Current.Previous = null; //reset current previous node
+                        state.Current = node; // set entered node as current
+                        //previous one is inide current already from history
+                        state.Previous = state.Current.Previous; //we display it only for debug
+                    }
+                }
+                else //coming to fresh one!
+                {
+                    node.ScaleUp();
+                    entered.Add(node);
+                    UpdateSelected();
+                    node.Previous = state.Current;
+                    state.Current = node;
+                    state.Previous = state.Current.Previous;
+                }
+            }
         }
     }
 
     private void OnNodeExit(Node node)
     {
-        if (gameState.FirstSelectedNode != null && node != gameState.FirstSelectedNode && gameState.CurrentlySelectedNode == node)
-        {
-            if(entered.TryGetValue(node, out var nodeFound))
-            {
-                nodeFound.ScaleDown();
-                entered.Remove(nodeFound);
-                gameState.CurrentlySelectedNode = null;
-                UpdateSelected();
-            }
-        }
+        //so far not needed
     }
 
     private void UpdateSelected()
     {
-        gameState.Selected = entered.ToList();
+        state.Selected = entered.ToList();
 
         int sum = 0;
 
-        foreach(var node in gameState.Selected)
+        foreach(var node in state.Selected)
         {
             sum += node.Value;
         }
 
-        gameState.SelectedResult = sum;
-        events.OnSelectedResultUpdate.Invoke(gameState.SelectedResult);
+        state.SelectedResult = sum;
+        events.OnSelectedResultUpdate.Invoke(state.SelectedResult);
     }
 }
