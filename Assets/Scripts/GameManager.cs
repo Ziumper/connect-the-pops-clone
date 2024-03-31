@@ -1,3 +1,4 @@
+using ExtensionsUtil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,7 +63,7 @@ public class GameManager : MonoBehaviour
             {
                 var position = settings.Rows[row].Columns[column]; //getPosition
                 var nodeGameObject = Instantiate(settings.NodePrefab,position); //make a game object with position as parent
-                var node = nodeGameObject.GetComponent<Node>(); //get node component
+                var node = nodeGameObject.GetComponentInChildren<Node>(); //get node component
                 node.name = node.name + "." + position.name; //set readable name
 
                 //add listeners
@@ -139,6 +140,7 @@ public class GameManager : MonoBehaviour
             foreach(var enteredNode in entered)
             {
                 enteredNode.ScaleDown();
+                enteredNode.HideAllArrows();   
             }
             
             entered.Clear();
@@ -148,13 +150,14 @@ public class GameManager : MonoBehaviour
 
     private void OnNodeEnter(Node node)
     {
-        if (state.First != null)
-        {
-            if (settings.Debug) { Debug.Log("Node entered add it to queue"); }
+        if (settings.Debug) { Debug.Log("Node entered", node.gameObject); }
 
+        if (state.First != null) //only when first is on
+        {
             //switch currently selected node if it's neighbour
             if (state.Current.IsNeighbour(node))
             {
+                Vector2 directionToNeighbour = state.Current.GetDirectionToNeighbour(node);
                 //when coming to entered previous one remove selected from entered ones!
                 if (entered.TryGetValue(node, out var enteredNode)) //is inside entered nodes
                 {
@@ -162,7 +165,10 @@ public class GameManager : MonoBehaviour
                     {
                         state.Current.ScaleDown();
                         entered.Remove(state.Current);
-                       
+
+                        state.Current.HideArrow(directionToNeighbour);
+                        node.HideArrow(directionToNeighbour.GetOpposite());
+
                         UpdateSelected();
                         
                         state.Current.Previous = null; //reset current previous node
@@ -173,6 +179,9 @@ public class GameManager : MonoBehaviour
                 }
                 else //coming to fresh one!
                 {
+                    state.Current.ShowArrow(directionToNeighbour);
+                    node.ShowArrow(directionToNeighbour.GetOpposite());
+
                     node.ScaleUp();
                     entered.Add(node);
                     UpdateSelected();
