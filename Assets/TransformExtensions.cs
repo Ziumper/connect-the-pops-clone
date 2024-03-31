@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ZiumperExtensions
+namespace ExtensionsUtil
 {
     public static class TransformExtensions
     {
@@ -15,6 +15,12 @@ namespace ZiumperExtensions
                 Debug.Log("Obiekt dotarł do pozycji docelowej.");
             }
         }
+
+        
+
     }
 
 }
+
+
+

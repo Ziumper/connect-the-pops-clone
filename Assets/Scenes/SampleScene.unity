@@ -1611,34 +1611,38 @@ MonoBehaviour:
     FirstSelectedNode: {fileID: 0}
     CurrentlySelectedNode: {fileID: 0}
   settings:
-    Amount: 25
     NodePrefab: {fileID: 4329691025009921182, guid: 5a3349857ed395541aed978ff21733c4, type: 3}
-    Positions:
-    - {fileID: 670348960}
-    - {fileID: 2013108075}
-    - {fileID: 538229132}
-    - {fileID: 1051314969}
-    - {fileID: 1007469201}
-    - {fileID: 595547534}
-    - {fileID: 1419095294}
-    - {fileID: 570374108}
-    - {fileID: 169594071}
-    - {fileID: 1507881321}
-    - {fileID: 228618246}
-    - {fileID: 1939424659}
-    - {fileID: 918707378}
-    - {fileID: 436809480}
-    - {fileID: 2090046929}
-    - {fileID: 2133625407}
-    - {fileID: 704330237}
-    - {fileID: 1038707974}
-    - {fileID: 1448286976}
-    - {fileID: 700069872}
-    - {fileID: 482334933}
-    - {fileID: 1313648675}
-    - {fileID: 199832478}
-    - {fileID: 901229388}
-    - {fileID: 398478755}
+    Rows:
+    - Columns:
+      - {fileID: 670348960}
+      - {fileID: 595547534}
+      - {fileID: 228618246}
+      - {fileID: 2133625407}
+      - {fileID: 482334933}
+    - Columns:
+      - {fileID: 2013108075}
+      - {fileID: 1419095294}
+      - {fileID: 1939424659}
+      - {fileID: 704330237}
+      - {fileID: 1313648675}
+    - Columns:
+      - {fileID: 538229132}
+      - {fileID: 570374108}
+      - {fileID: 918707378}
+      - {fileID: 1038707974}
+      - {fileID: 199832478}
+    - Columns:
+      - {fileID: 1051314969}
+      - {fileID: 169594071}
+      - {fileID: 436809480}
+      - {fileID: 1448286976}
+      - {fileID: 901229388}
+    - Columns:
+      - {fileID: 1007469201}
+      - {fileID: 1507881321}
+      - {fileID: 2090046929}
+      - {fileID: 700069872}
+      - {fileID: 398478755}
     Debug: 0
   events:
     OnSelectedResultUpdate:

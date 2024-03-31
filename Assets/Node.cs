@@ -1,13 +1,12 @@
 ﻿using System;
-using Unity.VisualScripting;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using ZiumperExtensions;
+using static UnityEngine.RuleTile.TilingRuleOutput;
 
-
-
-public class Node : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
+public class Node : MonoBehaviour, IVertex<Node, Vector2>,
+    IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [Serializable]
     public class NodeEvents
@@ -20,6 +19,16 @@ public class Node : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPoin
 
     public NodeEvents Events;
     public int Value;
+
+    private Animator animator;
+    private Dictionary<Node, Vector2> neighbours = new();
+    private readonly string scaleCondition = "ScaleUp";
+    
+    public void Start()
+    {
+        neighbours = new ();
+        animator = GetComponent<Animator>();
+    }
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -41,4 +50,33 @@ public class Node : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPoin
         Events.OnNodeExit.Invoke(this);
     }
 
+    public void ScaleUp()
+    {
+        animator.SetBool(scaleCondition, true);
+    }
+
+    public void ScaleDown()
+    {
+        animator.SetBool(scaleCondition, false);
+    }
+
+    public bool IsNeighbour(Node node)
+    {
+        if (neighbours.ContainsKey(node))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    public void AddEdge(Vector2 direction, Node vertex)
+    {
+        neighbours.Add(vertex, direction);
+    }
+
+    public void RemoveEdge(Node vertex)
+    {
+        neighbours.Remove(vertex);
+    }
 }
