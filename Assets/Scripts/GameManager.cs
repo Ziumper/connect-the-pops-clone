@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -56,7 +57,7 @@ public class GameManager : MonoBehaviour
     }
 
     
-    private NodeValue CreateNodeValue(Node spotNode)
+    private NodeValue SpawnNodeValue(Node spotNode)
     {
         var nodeGameObject = Instantiate(settings.NodePrefab, spotNode.transform); //make a game object with position as parent
         var value = nodeGameObject.GetComponentInChildren<NodeValue>(); //get node value component
@@ -84,7 +85,7 @@ public class GameManager : MonoBehaviour
             for (int column = 0; column < settings.Rows[row].Columns.Count; column++)
             {
                 var node = settings.Rows[row].Columns[column].GetComponent<Node>();
-                CreateNodeValue(node);
+                SpawnNodeValue(node);
 
                 grid[row][column] = node;
             }
@@ -252,11 +253,11 @@ public class GameManager : MonoBehaviour
         destroyList.Remove(value);
         if(destroyList.Count == 0)
         {
-            StartCoroutine(SpawnNewOnesInNextFrame());
+            StartCoroutine(MoveAndPrepareThoseToSpawn());
         }
     }
 
-    private IEnumerator SpawnNewOnesInNextFrame() 
+    private IEnumerator MoveAndPrepareThoseToSpawn() 
     {
         yield return new WaitForEndOfFrame();
         state.Last = null;
@@ -314,6 +315,22 @@ public class GameManager : MonoBehaviour
             moveValueNode.StartMovingTowardsTarget(node.transform);
         }
 
+        //spawn new ones in next
+        StartCoroutine(SpawnNewOnesInNextFrame(emptyNodesIndexes));
+    }
+
+    private IEnumerator SpawnNewOnesInNextFrame(Dictionary<int,List<int>> emptyNodesIndexes)
+    {
+        yield return new WaitForEndOfFrame();
+
+        foreach(var column in  emptyNodesIndexes.Keys)
+        {
+            foreach(var row in emptyNodesIndexes[column])
+            {
+                var node = grid[row][column];
+                SpawnNodeValue(node);
+            }
+        }
     }
 
 
