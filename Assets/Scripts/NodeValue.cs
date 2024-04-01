@@ -39,25 +39,27 @@ public class NodeValue : MonoBehaviour,
         public Vector2 Direction;
     }
 
+    [Header("Display")]
     [SerializeField] private List<NodeArrow> nodeArrows;
     [SerializeField] private int nodeValue;
     [SerializeField] private TextMeshProUGUI valueText;
 
     [Header("Moving variables")]
-    [SerializeField] private float elapsedTime = 0f;
-    [SerializeField] private float duration = 0.05f;
-    [SerializeField] private Vector3 initaliPosition;
-    [SerializeField] private bool move;
-    [SerializeField] private Transform target;
+    [SerializeField] private bool shouldMove;
     [SerializeField] private bool isToDestroy;
-
+    [SerializeField] private float elapsedTime = 0f;
+    [SerializeField] private Vector3 initaliPosition;
+    [SerializeField] private Transform target;
+    [SerializeField] private AnimationClip moveAnimation;
 
     private Animator animator;
     private Dictionary<Vector2, GameObject> arrowsMap = new();
 
  
     private readonly string scaleCondition = "ScaleUp";
+    private readonly string moveTrigger = "Move";
 
+    [Header("Events in NodeValue")]
     public NodeEvents Events;
     
     public int Value
@@ -84,7 +86,7 @@ public class NodeValue : MonoBehaviour,
 
     private void Update()
     {
-        if(move)
+        if(shouldMove)
         {
             MoveTowardsTarget();
         }
@@ -148,13 +150,13 @@ public class NodeValue : MonoBehaviour,
     private void MoveTowardsTarget()
     {
         elapsedTime += Time.deltaTime;
-        float part = Mathf.Clamp01(elapsedTime / duration);
+        float part = Mathf.Clamp01(elapsedTime / moveAnimation.length);
         transform.parent.position = Vector3.Lerp(initaliPosition, target.position, part);
 
         if (part >= 1f)
         {
             elapsedTime = 0f;
-            move = false;
+            shouldMove = false;
             initaliPosition = transform.parent.position;
 
             if(isToDestroy)
@@ -174,8 +176,9 @@ public class NodeValue : MonoBehaviour,
 
     public void StartMovingTowardsTarget(Transform target)
     {
+        animator.SetTrigger(moveTrigger);
         this.target = target;
-        move = true;
+        shouldMove = true;
     }
 
     public void OnDestroy()
