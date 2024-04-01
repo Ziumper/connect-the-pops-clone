@@ -179,6 +179,7 @@ public class GameManager : MonoBehaviour
         if (state.First != null) //only when first is on
         {
             //switch currently selected node if it's neighbour
+            var lastValue = state.Last.GetComponentInChildren<NodeValue>();
             var node = value.GetComponentInParent<Node>();
             if (state.Last.IsNeighbour(node))
             {
@@ -188,7 +189,6 @@ public class GameManager : MonoBehaviour
                 {
                     if (value != state.Last && state.Last.Previous == node) //the same as the one that we were coming from
                     {
-                        var lastValue = state.Last.GetComponentInChildren<NodeValue>();
                         lastValue.ScaleDown();
                         active.Remove(lastValue);
 
@@ -203,9 +203,8 @@ public class GameManager : MonoBehaviour
                         state.Previous = state.Last.Previous; //we display it only for debug
                     }
                 }
-                else //coming to fresh one!
+                else if(value.Value == lastValue.Value)//coming to fresh one!
                 {
-                    var lastValue = state.Last.GetComponentInChildren<NodeValue>();
                     lastValue.ShowArrow(directionToNeighbour);
                     value.ShowArrow(directionToNeighbour.GetOpposite());
 
