@@ -19,6 +19,7 @@ public class NodeValue : MonoBehaviour,
         public UnityEvent<NodeValue> OnNodeExit;
         public UnityEvent<NodeValue> OnNodeOnDestroyPosition;
         public UnityEvent<NodeValue> OnNodeFinishedMoving;
+        public UnityEvent<NodeValue> OnNodeValueOnDestroy;
 
         public void RemoveAllListeners()
         {
@@ -73,7 +74,7 @@ public class NodeValue : MonoBehaviour,
     {
         animator = GetComponentInParent<Animator>();
         Value = nodeValue;
-        initaliPosition = transform.position;
+        initaliPosition = transform.parent.position;
         
         foreach(var arrow in nodeArrows)
         {
@@ -148,12 +149,13 @@ public class NodeValue : MonoBehaviour,
     {
         elapsedTime += Time.deltaTime;
         float part = Mathf.Clamp01(elapsedTime / duration);
-        transform.position = Vector3.Lerp(initaliPosition, target.position, part);
+        transform.parent.position = Vector3.Lerp(initaliPosition, target.position, part);
 
         if (part >= 1f)
         {
             elapsedTime = 0f;
             move = false;
+            initaliPosition = transform.parent.position;
 
             if(isToDestroy)
             {
@@ -174,5 +176,10 @@ public class NodeValue : MonoBehaviour,
     {
         this.target = target;
         move = true;
+    }
+
+    public void OnDestroy()
+    {
+        Events.OnNodeValueOnDestroy.Invoke(this);
     }
 }

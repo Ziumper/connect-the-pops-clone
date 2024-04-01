@@ -1,5 +1,6 @@
 using ExtensionsUtil;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -31,6 +32,7 @@ public class GameManager : MonoBehaviour
     private HashSet<NodeValue> active;
     private DirectedGraph graph;
     private Node[][] grid;
+    private List<NodeValue> destroyList;
 
     private readonly Vector2[] directions =
         {
@@ -43,16 +45,17 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Settings settings;
     [SerializeField] private GameManagerEvents events;
 
-
     private void Start()
     {
         active = new HashSet<NodeValue>();
         graph = new DirectedGraph();
         grid = InstatiateNodes();
+        destroyList = new List<NodeValue>();
 
         AddNeighboursForNodes(grid);
     }
 
+    
     private NodeValue CreateNodeValue(Node spotNode)
     {
         var nodeGameObject = Instantiate(settings.NodePrefab, spotNode.transform); //make a game object with position as parent
@@ -147,23 +150,22 @@ public class GameManager : MonoBehaviour
                 for (int i = entered.Length - 2; i >= 0; i--)
                 {
                     var enteredNodeValue = entered[i];
-                    
-                  
+
+                    destroyList.Add(enteredNodeValue);
+                    enteredNodeValue.Events.OnNodeOnDestroyPosition.AddListener(OnNodeValueDestroyPosition);
+
                     //start moving
                     enteredNodeValue.StartDestroyMoving(state.Last.transform);
-                    enteredNodeValue.Events.OnNodeOnDestroyPosition.AddListener(OnNodeValueDestroyPosition);
                 }
 
                 //now just make it through entire grid and move all empty spaces to fill up
 
             }
 
+            //first cleanup
             state.First = null;
-            //TODO cleanup after destroy all
-            //state.First = null;
-            //state.Last = null;
-            //state.Previous = null;
-
+            state.Previous = null;
+            
             active.Clear();
             UpdateSelected();
         }
@@ -232,9 +234,84 @@ public class GameManager : MonoBehaviour
         var lastValue = state.Last.GetComponentInChildren<NodeValue>();
         lastValue.Value += value.Value;
         value.Events.RemoveAllListeners();
-    
-        Destroy(enteredNode.transform.GetChild(0).gameObject);
+
+        value.Events.OnNodeValueOnDestroy.AddListener(OnNodeValueOnDestroy);
+
+        var containerNode = enteredNode.transform.GetChild(0).gameObject;
+
+        Destroy(containerNode);
     }
+
+    private void OnNodeValueOnDestroy(NodeValue value)
+    {
+        Debug.Log("Finished destroying");
+        destroyList.Remove(value);
+        if(destroyList.Count == 0)
+        {
+            StartCoroutine(SpawnNewOnesInNextFrame());
+        }
+    }
+
+    private IEnumerator SpawnNewOnesInNextFrame() 
+    {
+        yield return new WaitForEndOfFrame();
+        state.Last = null;
+        if (settings.Debug) { Debug.Log("All nodes have been destroyed"); }
+
+        int columnsLength = settings.Rows[0].Columns.Count;
+        var upDirection = Vector2.down;
+        var downDirection = upDirection.GetOpposite();
+
+        Dictionary<Node, NodeValue> moveDictionary = new Dictionary<Node, NodeValue>();
+        Dictionary<int, List<int>> emptyNodesIndexes = new();
+
+        //fill up the move dictionary and empty nodes indexes
+        for (int column = 0; column < columnsLength; column++)
+        {
+            int moveCounter = 0;
+            for (int indexOfRow = settings.Rows.Count - 1; indexOfRow >= 0; indexOfRow--)
+            {
+                var current = grid[indexOfRow][column];
+                var nodeValueToMove = current.GetComponentInChildren<NodeValue>();
+                bool hasValueToMove = nodeValueToMove != null;
+                if (moveCounter > 0 && hasValueToMove)
+                {
+                    var moveCurrent = current;
+                    for (int i = 0; i < moveCounter; i++)
+                    {
+                        moveCurrent = moveCurrent.GetNeighbourWithDirection(downDirection);
+                    }
+
+                    //here we moved enough times    
+                    moveDictionary.Add(moveCurrent, nodeValueToMove);
+                }
+
+                if (!hasValueToMove) //it does not have any value 
+                {
+                    moveCounter++;
+                }
+            }
+
+            List<int> empty = new List<int>();
+            //fill up empty nodes 
+            for (int emptyRow = 0; emptyRow < moveCounter; emptyRow++)
+            {
+                empty.Add(emptyRow);
+            }
+
+            emptyNodesIndexes.Add(column, empty);
+        }
+
+        //move the nodes
+        foreach (var node in moveDictionary.Keys)
+        {
+            var moveValueNode = moveDictionary[node];
+            moveValueNode.gameObject.transform.parent.transform.SetParent(node.gameObject.transform);
+            moveValueNode.StartMovingTowardsTarget(node.transform);
+        }
+
+    }
+
 
     private void UpdateSelected()
     {
