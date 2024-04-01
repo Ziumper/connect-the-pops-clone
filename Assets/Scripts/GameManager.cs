@@ -2,10 +2,8 @@ using ExtensionsUtil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.EventSystems;
 
 public class GameManager : MonoBehaviour
 {
@@ -24,83 +22,78 @@ public class GameManager : MonoBehaviour
     }
 
     [Serializable]
-    public class GameState
-    {
-        public List<Node> Spawned;
-        public List<Node> Selected;
-        public int SelectedResult;
-        public Node First;
-        public Node Current;
-        public Node Previous;
-    }
-
-    [Serializable]
     public class GameManagerEvents
     {
         public UnityEvent<int> OnSelectedResultUpdate;
     }
-    
-    [SerializeField] private GameState state;
-    [SerializeField] private Settings settings;
-    [SerializeField] private GameManagerEvents events;
 
-    private HashSet<Node> entered;
+
+    private HashSet<NodeValue> active;
     private DirectedGraph graph;
-  
-    private void Start()
-    {
-        entered = new HashSet<Node>();
-        graph = new DirectedGraph();
-        
-        Node[][] grid = new Node[settings.Rows.Count][];
-        
-        //instantiate nodes
-        for(int row = 0; row < settings.Rows.Count; row++)
-        {
-            grid[row] = new Node[settings.Rows[row].Columns.Count];
-            
-            for(int column = 0; column < settings.Rows[row].Columns.Count; column++)
-            {
-                var position = settings.Rows[row].Columns[column]; //getPosition
-                var nodeGameObject = Instantiate(settings.NodePrefab,position); //make a game object with position as parent
-                var node = nodeGameObject.GetComponentInChildren<Node>(); //get node component
-                node.name = node.name + "." + position.name; //set readable name
-
-                //add listeners
-                node.Events.OnNodeEnter.AddListener(OnNodeEnter); 
-                node.Events.OnNodeUp.AddListener(OnNodeUp);
-                node.Events.OnNodeDown.AddListener(OnNodeDown);
-                node.Events.OnNodeExit.AddListener(OnNodeExit);
-
-                //add it to the spawned list
-                state.Spawned.Add(node);
-                grid[row][column] = node;               
-            }
-        }
-
-
-        //here all needed nodes have been created so we can start with checking and adding neighbours
-        //handle adding neighbours
-        /**
-         *  it goes like this where x is a center point node
-         *  (-1,-1),(0,-1),(1,-1)
-         *  (-1,0),   x   ,(1,0)
-         *  (-1,1), (0,1) ,(1,1)
-         *
-         */
-        Vector2[] directions =
+    private readonly Vector2[] directions =
         {
             new (-1,-1),  new(0,-1),  new (1,-1),
             new (-1,0),               new (1,0),
             new (-1,1),   new(0,1),   new (1,1)
         };
 
+    [SerializeField] private GameState state;
+    [SerializeField] private Settings settings;
+    [SerializeField] private GameManagerEvents events;
+
+    private void Start()
+    {
+        active = new HashSet<NodeValue>();
+        graph = new DirectedGraph();
+
+        Node[][] grid = InstatiateNodes();
+        AddNeighboursForNodes(grid);
+    }
+
+    private NodeValue CreateNodeValue(Node spotNode)
+    {
+        var nodeGameObject = Instantiate(settings.NodePrefab, spotNode.transform); //make a game object with position as parent
+        var value = nodeGameObject.GetComponentInChildren<NodeValue>(); //get node value component
+        value.name = value.name + "." + spotNode.name; //set readable name
+
+        //add listeners
+        value.Events.OnNodeEnter.AddListener(OnNodeEnter);
+        value.Events.OnNodeUp.AddListener(OnNodeValueUp);
+        value.Events.OnNodeDown.AddListener(OnNodeValueDown);
+        value.Events.OnNodeExit.AddListener(OnNodeExit);
+
+        return value;
+    }
+
+    private Node[][] InstatiateNodes()
+    {
+        Node[][] grid = new Node[settings.Rows.Count][];
+
+        //instantiate nodes
         for (int row = 0; row < settings.Rows.Count; row++)
         {
-            for(int column = 0; column < settings.Rows[row].Columns.Count; column++)
+            grid[row] = new Node[settings.Rows[row].Columns.Count];
+
+            for (int column = 0; column < settings.Rows[row].Columns.Count; column++)
+            {
+                var node = settings.Rows[row].Columns[column].GetComponent<Node>();
+                CreateNodeValue(node);
+
+                grid[row][column] = node;
+            }
+        }
+
+        return grid;
+    }
+
+    private void AddNeighboursForNodes(Node[][] grid)
+    {
+        for (int row = 0; row < settings.Rows.Count; row++)
+        {
+            for (int column = 0; column < settings.Rows[row].Columns.Count; column++)
             {
                 var node = grid[row][column];
-                foreach(var direction in directions)
+                foreach (var direction in directions)
                 {
                     var resultVector = new Vector2(column, row) + direction;
                     bool insideGrid = resultVector.x >= 0 && resultVector.x < settings.Rows[column].Columns.Count
@@ -115,115 +108,129 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OnNodeDown(Node node)
+    private void OnNodeValueDown(NodeValue value)
     {
-        if(state.First == null)
+        if (state.First == null)
         {
-            if (settings.Debug) { Debug.Log("Node has been down let's do it!", node); }
-            state.First = node;
-            state.Current = node;
-            node.ScaleUp();
-            entered.Add(node);
+            if (settings.Debug) { Debug.Log("Node has been down let's do it!", value); }
+            state.First = value.GetComponentInParent<Node>();
+            state.Last = value.GetComponentInParent<Node>();
+            value.ScaleUp();
+            active.Add(value);
             UpdateSelected();
         }
     }
 
-    private void OnNodeUp(Node node)
+    private void OnNodeValueUp(NodeValue node)
     {
-        if(state.First != null)
+        if (state.First != null)
         {
             if (settings.Debug) { Debug.Log("Node has been up, stop checking!", node); }
-            
-            foreach(var enteredNode in entered)
+
+            foreach (var enteredNode in active)
             {
                 enteredNode.ScaleDown();
                 enteredNode.HideAllArrows();
             }
 
             //if at least two let's change the value of the first, destroy rest and spawn next ones 
-            if(entered.Count > 1)
+            if (active.Count > 1)
             {
-                var entered = this.entered.ToArray();
-                for(int i = 1; i < entered.Length; i++)
+                var entered = active.ToArray();
+                var lastValue = state.Last.GetComponentInChildren<NodeValue>();
+
+                //get the last one should be the one that last!
+                for (int i = entered.Length - 2; i >= 0; i--)
                 {
-                    var enteredNode = entered[i];
+                    var enteredNodeValue = entered[i];
 
                     //add value for nodes
-                    state.First.Value += enteredNode.Value;
-                    
+                    lastValue.Value += enteredNodeValue.Value;
+
+                    //cleanup
+                    var enteredNode = entered[i].GetComponentInParent<Node>();
+                    enteredNode.Previous = null;
                     graph.RemoveNode(enteredNode);
-                    Destroy(enteredNode.gameObject);
+
+                    //and destroy
+                    Destroy(enteredNodeValue.gameObject);
                 }
+
+                //now just make it through entire grid and move all empty spaces to fill up
+
             }
 
             state.First = null;
-            state.Current = null;
+            state.Last = null;
             state.Previous = null;
 
-            entered.Clear();
+            active.Clear();
             UpdateSelected();
         }
     }
 
-    private void OnNodeEnter(Node node)
+    private void OnNodeEnter(NodeValue value)
     {
-        if (settings.Debug) { Debug.Log("Node entered", node.gameObject); }
+        if (settings.Debug) { Debug.Log("Node entered", value.gameObject); }
 
         if (state.First != null) //only when first is on
         {
             //switch currently selected node if it's neighbour
-            if (state.Current.IsNeighbour(node))
+            var node = value.GetComponentInParent<Node>();
+            if (state.Last.IsNeighbour(node))
             {
-                Vector2 directionToNeighbour = state.Current.GetDirectionToNeighbour(node);
+                Vector2 directionToNeighbour = state.Last.GetDirectionToNeighbour(node);
                 //when coming to entered previous one remove selected from entered ones!
-                if (entered.TryGetValue(node, out var enteredNode)) //is inside entered nodes
+                if (active.TryGetValue(value, out var enteredNode)) //is inside entered nodes
                 {
-                    if(node != state.Current && state.Current.Previous == node) //the same as the one that we were coming from
+                    if (value != state.Last && state.Last.Previous == node) //the same as the one that we were coming from
                     {
-                        state.Current.ScaleDown();
-                        entered.Remove(state.Current);
+                        var lastValue = state.Last.GetComponentInChildren<NodeValue>();
+                        lastValue.ScaleDown();
+                        active.Remove(lastValue);
 
-                        state.Current.HideArrow(directionToNeighbour);
-                        node.HideArrow(directionToNeighbour.GetOpposite());
+                        lastValue.HideArrow(directionToNeighbour);
+                        value.HideArrow(directionToNeighbour.GetOpposite());
 
                         UpdateSelected();
-                        
-                        state.Current.Previous = null; //reset current previous node
-                        state.Current = node; // set entered node as current
+
+                        state.Last.Previous = null; //reset current previous node
+                        state.Last = node; // set entered node as current
                         //previous one is inide current already from history
-                        state.Previous = state.Current.Previous; //we display it only for debug
+                        state.Previous = state.Last.Previous; //we display it only for debug
                     }
                 }
                 else //coming to fresh one!
                 {
-                    state.Current.ShowArrow(directionToNeighbour);
-                    node.ShowArrow(directionToNeighbour.GetOpposite());
+                    var lastValue = state.Last.GetComponentInChildren<NodeValue>();
+                    lastValue.ShowArrow(directionToNeighbour);
+                    value.ShowArrow(directionToNeighbour.GetOpposite());
 
-                    node.ScaleUp();
-                    entered.Add(node);
+                    value.ScaleUp();
+                    active.Add(value);
                     UpdateSelected();
-                    node.Previous = state.Current;
-                    state.Current = node;
-                    state.Previous = state.Current.Previous;
+                    node.Previous = state.Last;
+                    state.Last = node;
+                    state.Previous = state.Last.Previous;
                 }
             }
         }
     }
 
-    private void OnNodeExit(Node node)
+    private void OnNodeExit(NodeValue value)
     {
         //so far not needed
     }
 
     private void UpdateSelected()
     {
-        state.Selected = entered.ToList();
+        var listOfValues = new List<NodeValue>();
 
         int sum = 0;
-
-        foreach(var node in state.Selected)
+        foreach (var selected in active)
         {
-            sum += node.Value;
+            listOfValues.Add(selected.GetComponentInChildren<NodeValue>());
+            sum += selected.Value;
         }
 
         state.SelectedResult = sum;
