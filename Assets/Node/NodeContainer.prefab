@@ -258,6 +258,12 @@ MonoBehaviour:
     Direction: {x: -1, y: 1}
   nodeValue: 2
   valueText: {fileID: 957029491734533972}
+  elapsedTime: 0
+  duration: 0.25
+  initaliPosition: {x: 0, y: 0, z: 0}
+  move: 0
+  target: {fileID: 0}
+  isToDestroy: 0
   Events:
     OnNodeDown:
       m_PersistentCalls:
@@ -271,7 +277,12 @@ MonoBehaviour:
     OnNodeExit:
       m_PersistentCalls:
         m_Calls: []
-  Previous: {fileID: 0}
+    OnNodeOnDestroyPosition:
+      m_PersistentCalls:
+        m_Calls: []
+    OnNodeFinishedMoving:
+      m_PersistentCalls:
+        m_Calls: []
 --- !u!1 &2729424387444581360
 GameObject:
   m_ObjectHideFlags: 0

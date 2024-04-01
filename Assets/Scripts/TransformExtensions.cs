@@ -4,16 +4,18 @@ namespace ExtensionsUtil
 {
     public static class TransformExtensions
     {
-        public static void MoveTowards(this Transform origin, Transform target, float duration, float elapsedTime, Vector3 initialPosition)
+        public static float MoveTowards(this Transform origin, Transform target, float duration, float elapsedTime, Vector3 initialPosition)
         {
             elapsedTime += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsedTime / duration);
-            origin.position = Vector3.Lerp(initialPosition, target.position, t);
+            float part = Mathf.Clamp01(elapsedTime / duration);
+            origin.position = Vector3.Lerp(initialPosition, target.position, part);
 
-            if (t >= 1f)
+            if (part >= 1f)
             {
                 Debug.Log("Obiekt dotarł do pozycji docelowej.");
             }
+
+            return elapsedTime;
         }
 
         

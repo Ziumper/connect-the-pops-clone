@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ExtensionsUtil;
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -16,6 +17,18 @@ public class NodeValue : MonoBehaviour,
         public UnityEvent<NodeValue> OnNodeUp;
         public UnityEvent<NodeValue> OnNodeEnter;
         public UnityEvent<NodeValue> OnNodeExit;
+        public UnityEvent<NodeValue> OnNodeOnDestroyPosition;
+        public UnityEvent<NodeValue> OnNodeFinishedMoving;
+
+        public void RemoveAllListeners()
+        {
+            OnNodeDown.RemoveAllListeners();
+            OnNodeUp.RemoveAllListeners();
+            OnNodeEnter.RemoveAllListeners();
+            OnNodeExit.RemoveAllListeners();
+            OnNodeOnDestroyPosition.RemoveAllListeners();
+            OnNodeFinishedMoving.RemoveAllListeners();
+        }
     }
 
     [Serializable]
@@ -29,8 +42,19 @@ public class NodeValue : MonoBehaviour,
     [SerializeField] private int nodeValue;
     [SerializeField] private TextMeshProUGUI valueText;
 
+    [Header("Moving variables")]
+    [SerializeField] private float elapsedTime = 0f;
+    [SerializeField] private float duration = 0.05f;
+    [SerializeField] private Vector3 initaliPosition;
+    [SerializeField] private bool move;
+    [SerializeField] private Transform target;
+    [SerializeField] private bool isToDestroy;
+
+
     private Animator animator;
     private Dictionary<Vector2, GameObject> arrowsMap = new();
+
+ 
     private readonly string scaleCondition = "ScaleUp";
 
     public NodeEvents Events;
@@ -45,14 +69,23 @@ public class NodeValue : MonoBehaviour,
         }
     }
     
-    public void Start()
+    private void Start()
     {
         animator = GetComponentInParent<Animator>();
         Value = nodeValue;
+        initaliPosition = transform.position;
         
         foreach(var arrow in nodeArrows)
         {
             arrowsMap.Add(arrow.Direction, arrow.Image.gameObject);
+        }
+    }
+
+    private void Update()
+    {
+        if(move)
+        {
+            MoveTowardsTarget();
         }
     }
 
@@ -108,5 +141,38 @@ public class NodeValue : MonoBehaviour,
         {
             nodeArrow.Image.gameObject.SetActive(false);
         }
+    }
+
+
+    private void MoveTowardsTarget()
+    {
+        elapsedTime += Time.deltaTime;
+        float part = Mathf.Clamp01(elapsedTime / duration);
+        transform.position = Vector3.Lerp(initaliPosition, target.position, part);
+
+        if (part >= 1f)
+        {
+            elapsedTime = 0f;
+            move = false;
+
+            if(isToDestroy)
+            {
+                Events.OnNodeOnDestroyPosition.Invoke(this);
+            }
+
+            Events.OnNodeFinishedMoving.Invoke(this);
+        }
+    }
+
+    public void StartDestroyMoving(Transform target)
+    {
+        StartMovingTowardsTarget(target);
+        isToDestroy = true;
+    }
+
+    public void StartMovingTowardsTarget(Transform target)
+    {
+        this.target = target;
+        move = true;
     }
 }

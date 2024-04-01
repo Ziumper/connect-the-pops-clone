@@ -30,6 +30,8 @@ public class GameManager : MonoBehaviour
 
     private HashSet<NodeValue> active;
     private DirectedGraph graph;
+    private Node[][] grid;
+
     private readonly Vector2[] directions =
         {
             new (-1,-1),  new(0,-1),  new (1,-1),
@@ -41,12 +43,13 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Settings settings;
     [SerializeField] private GameManagerEvents events;
 
+
     private void Start()
     {
         active = new HashSet<NodeValue>();
         graph = new DirectedGraph();
+        grid = InstatiateNodes();
 
-        Node[][] grid = InstatiateNodes();
         AddNeighboursForNodes(grid);
     }
 
@@ -61,6 +64,7 @@ public class GameManager : MonoBehaviour
         value.Events.OnNodeUp.AddListener(OnNodeValueUp);
         value.Events.OnNodeDown.AddListener(OnNodeValueDown);
         value.Events.OnNodeExit.AddListener(OnNodeExit);
+     
 
         return value;
     }
@@ -143,17 +147,11 @@ public class GameManager : MonoBehaviour
                 for (int i = entered.Length - 2; i >= 0; i--)
                 {
                     var enteredNodeValue = entered[i];
-
-                    //add value for nodes
-                    lastValue.Value += enteredNodeValue.Value;
-
-                    //cleanup
-                    var enteredNode = entered[i].GetComponentInParent<Node>();
-                    enteredNode.Previous = null;
-                    graph.RemoveNode(enteredNode);
-
-                    //and destroy
-                    Destroy(enteredNodeValue.gameObject);
+                    
+                  
+                    //start moving
+                    enteredNodeValue.StartDestroyMoving(state.Last.transform);
+                    enteredNodeValue.Events.OnNodeOnDestroyPosition.AddListener(OnNodeValueDestroyPosition);
                 }
 
                 //now just make it through entire grid and move all empty spaces to fill up
@@ -161,8 +159,10 @@ public class GameManager : MonoBehaviour
             }
 
             state.First = null;
-            state.Last = null;
-            state.Previous = null;
+            //TODO cleanup after destroy all
+            //state.First = null;
+            //state.Last = null;
+            //state.Previous = null;
 
             active.Clear();
             UpdateSelected();
@@ -220,6 +220,20 @@ public class GameManager : MonoBehaviour
     private void OnNodeExit(NodeValue value)
     {
         //so far not needed
+    }
+
+    private void OnNodeValueDestroyPosition(NodeValue value)
+    {
+        //destroy and clenaup
+        //cleanup
+        var enteredNode = value.GetComponentInParent<Node>();
+        enteredNode.Previous = null;
+
+        var lastValue = state.Last.GetComponentInChildren<NodeValue>();
+        lastValue.Value += value.Value;
+        value.Events.RemoveAllListeners();
+    
+        Destroy(enteredNode.transform.GetChild(0).gameObject);
     }
 
     private void UpdateSelected()
