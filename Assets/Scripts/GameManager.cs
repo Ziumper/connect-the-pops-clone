@@ -244,7 +244,11 @@ public class GameManager : MonoBehaviour
 
     private void OnNodeValueOnDestroy(NodeValue value)
     {
-        Debug.Log("Finished destroying");
+        if (settings.Debug)
+        {
+            Debug.Log("Finished destroying");
+        }
+        
         destroyList.Remove(value);
         if(destroyList.Count == 0)
         {
