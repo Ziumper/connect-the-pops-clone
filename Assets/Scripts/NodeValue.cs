@@ -43,6 +43,7 @@ public class NodeValue : MonoBehaviour,
     [SerializeField] private List<NodeArrow> nodeArrows;
     [SerializeField] private int nodeValue;
     [SerializeField] private TextMeshProUGUI valueText;
+    [SerializeField] private ColorTemplate template;
 
     [Header("Moving variables")]
     [SerializeField] private bool shouldMove;
@@ -68,6 +69,14 @@ public class NodeValue : MonoBehaviour,
         set 
         {
             nodeValue = value;
+            var color = template.GetColorForValue(nodeValue);
+
+            GetComponent<Image>().color = color;
+            foreach(var arrow in nodeArrows)
+            {
+                arrow.Image.color = color;
+            }
+
             valueText.text = nodeValue.ToString();
         }
     }

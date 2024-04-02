@@ -21,6 +21,7 @@ public class GameManager : MonoBehaviour
         public GameObject NodePrefab;
         public List<PositionRow> Rows;
         public bool Debug;
+        public ColorTemplate Template;
     }
 
     [Serializable]

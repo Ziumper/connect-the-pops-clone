@@ -1903,6 +1903,7 @@ MonoBehaviour:
     First: {fileID: 0}
     Last: {fileID: 0}
     Previous: {fileID: 0}
+    CanRespawn: 0
   settings:
     NodePrefab: {fileID: 4329691025009921182, guid: 5a3349857ed395541aed978ff21733c4, type: 3}
     Rows:
@@ -1937,6 +1938,7 @@ MonoBehaviour:
       - {fileID: 700069872}
       - {fileID: 398478755}
     Debug: 0
+    Template: {fileID: 11400000, guid: df87fd9fb6ad18e4e86730baf38d0264, type: 2}
   events:
     OnSelectedResultUpdate:
       m_PersistentCalls:
