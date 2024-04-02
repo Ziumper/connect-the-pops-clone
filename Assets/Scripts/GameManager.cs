@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -22,6 +21,13 @@ public class GameManager : MonoBehaviour
         public List<PositionRow> Rows;
         public bool Debug;
         public ColorTemplate Template;
+        public int PowerSpawnStart;
+        public int PowerSpawnEnd;
+
+        //Limiters
+        public static int MaxPowerSpliter = 10;
+        public static string SpliterSufixAppend = "K";
+        public static int MaxPowerSpliting = 1024;
     }
 
     [Serializable]
@@ -29,7 +35,6 @@ public class GameManager : MonoBehaviour
     {
         public UnityEvent<int> OnSelectedResultUpdate;
     }
-
 
     private HashSet<NodeValue> active;
     private DirectedGraph graph;
@@ -61,12 +66,14 @@ public class GameManager : MonoBehaviour
         AddNeighboursForNodes(grid);
     }
 
-    
     private NodeValue SpawnNodeValue(Node spotNode)
     {
         var nodeGameObject = Instantiate(settings.NodePrefab, spotNode.transform); //make a game object with position as parent
         var value = nodeGameObject.GetComponentInChildren<NodeValue>(); //get node value component
         value.name = value.name + "." + spotNode.name; //set readable name
+
+        int randomPow = UnityEngine.Random.Range(settings.PowerSpawnStart, settings.PowerSpawnEnd+1);
+        value.Value = (int)Mathf.Pow(2,randomPow);
 
         //add listeners
         value.Events.OnNodeValueEnter.AddListener(OnNodeValueEnter);

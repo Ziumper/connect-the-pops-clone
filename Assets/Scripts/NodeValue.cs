@@ -39,19 +39,18 @@ public class NodeValue : MonoBehaviour,
         public Vector2 Direction;
     }
 
-    [Header("Display")]
-    [SerializeField] private List<NodeArrow> nodeArrows;
-    [SerializeField] private int nodeValue;
-    [SerializeField] private TextMeshProUGUI valueText;
-    [SerializeField] private ColorTemplate template;
-
-    [Header("Moving variables")]
     [SerializeField] private bool shouldMove;
     [SerializeField] private bool isToDestroy;
     [SerializeField] private float elapsedTime = 0f;
     [SerializeField] private Vector3 initaliPosition;
+    [SerializeField] private int nodeValue;
+    [SerializeField] private TextMeshProUGUI valueText;
+    [SerializeField] private ColorTemplate template;
+    [SerializeField] private Image circleIn;
     [SerializeField] private Transform target;
     [SerializeField] private AnimationClip moveAnimation;
+    [SerializeField] private List<NodeArrow> nodeArrows;
+
 
     private Animator animator;
     private Dictionary<Vector2, GameObject> arrowsMap = new();
@@ -61,13 +60,19 @@ public class NodeValue : MonoBehaviour,
 
     [Header("Events in NodeValue")]
     public NodeEvents Events;
-    
+
     public int Value
     {
         get { return nodeValue; } 
         set 
         {
-            nodeValue = ClosestTwoPower(value);
+            if(value <= 0)
+            {
+                nodeValue = 0;
+                return;
+            }
+
+            nodeValue = ClosestTwoPowerRound(value);
             var color = template.GetColorForValue(nodeValue);
 
             GetComponent<Image>().color = color;
@@ -76,19 +81,45 @@ public class NodeValue : MonoBehaviour,
                 arrow.Image.color = color;
             }
 
-            valueText.text = nodeValue.ToString();
+            //toggle circle in
+            int power = GetClosesTwoPower(value);
+            ToggleCircleIn(power, circleIn);
+                
+            valueText.text = NodeValueToString(nodeValue);
         }
     }
 
-    public static int ClosestTwoPower(int value)
+    public static void ToggleCircleIn(int power, Image circleImage)
+    {
+        circleImage.gameObject.SetActive(power >= GameManager.Settings.MaxPowerSpliter);
+    }
+
+    public static int ClosestTwoPowerRound(int value)
+    {
+        return (int)Mathf.Pow(2, GetClosesTwoPower(value));
+    }
+
+    public static int GetClosesTwoPower(int value)
     {
         if (value <= 0)
+        {
             return 0;
-
+        }
+            
         float logBase2 = Mathf.Log(value, 2);
-        int power = Mathf.FloorToInt(logBase2);
+        return Mathf.FloorToInt(logBase2);
+    }
+    
+    public static string NodeValueToString(int value)
+    {
+        int power = GetClosesTwoPower(value);
+        if(power >= GameManager.Settings.MaxPowerSpliter)
+        {
+            string valueToString = (value / GameManager.Settings.MaxPowerSpliting).ToString() + GameManager.Settings.SpliterSufixAppend;
+            return valueToString;
+        }
 
-        return (int)Mathf.Pow(2, power);
+        return value.ToString();
     }
 
     private void Start()

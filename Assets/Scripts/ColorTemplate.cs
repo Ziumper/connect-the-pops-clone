@@ -13,6 +13,12 @@ public class ColorTemplate : ScriptableObject
     public Color GetColorForValue(int value)
     {
         var index = ((int)Mathf.Log(value, 2) % colorValues.Count) - 1;
+        if (index < 0) 
+        {
+            var lastIndex = colorValues.Count - 1;
+            index = lastIndex;
+        }
+        
         return colorValues[index];
     }
 }
