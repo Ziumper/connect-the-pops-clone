@@ -13,22 +13,22 @@ public class NodeValue : MonoBehaviour,
     [Serializable]
     public class NodeEvents
     {
-        public UnityEvent<NodeValue> OnNodeDown;
-        public UnityEvent<NodeValue> OnNodeUp;
-        public UnityEvent<NodeValue> OnNodeEnter;
-        public UnityEvent<NodeValue> OnNodeExit;
-        public UnityEvent<NodeValue> OnNodeOnDestroyPosition;
-        public UnityEvent<NodeValue> OnNodeFinishedMoving;
+        public UnityEvent<NodeValue> OnNodeValueDown;
+        public UnityEvent<NodeValue> OnNodeValueUp;
+        public UnityEvent<NodeValue> OnNodeValueEnter;
+        public UnityEvent<NodeValue> OnNodeValueExit;
+        public UnityEvent<NodeValue> OnNodeValueOnDestroyPosition;
+        public UnityEvent<NodeValue> OnNodeValueFinishedMoving;
         public UnityEvent<NodeValue> OnNodeValueOnDestroy;
 
         public void RemoveAllListeners()
         {
-            OnNodeDown.RemoveAllListeners();
-            OnNodeUp.RemoveAllListeners();
-            OnNodeEnter.RemoveAllListeners();
-            OnNodeExit.RemoveAllListeners();
-            OnNodeOnDestroyPosition.RemoveAllListeners();
-            OnNodeFinishedMoving.RemoveAllListeners();
+            OnNodeValueDown.RemoveAllListeners();
+            OnNodeValueUp.RemoveAllListeners();
+            OnNodeValueEnter.RemoveAllListeners();
+            OnNodeValueExit.RemoveAllListeners();
+            OnNodeValueOnDestroyPosition.RemoveAllListeners();
+            OnNodeValueFinishedMoving.RemoveAllListeners();
         }
     }
 
@@ -68,7 +68,7 @@ public class NodeValue : MonoBehaviour,
         get { return nodeValue; } 
         set 
         {
-            nodeValue = value;
+            nodeValue = ClosestTwoPower(value);
             var color = template.GetColorForValue(nodeValue);
 
             GetComponent<Image>().color = color;
@@ -80,7 +80,18 @@ public class NodeValue : MonoBehaviour,
             valueText.text = nodeValue.ToString();
         }
     }
-    
+
+    public static int ClosestTwoPower(int value)
+    {
+        if (value <= 0)
+            return 0;
+
+        float logBase2 = Mathf.Log(value, 2);
+        int power = Mathf.FloorToInt(logBase2);
+
+        return (int)Mathf.Pow(2, power);
+    }
+
     private void Start()
     {
         animator = GetComponentInParent<Animator>();
@@ -119,22 +130,22 @@ public class NodeValue : MonoBehaviour,
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        Events.OnNodeDown.Invoke(this);
+        Events.OnNodeValueDown.Invoke(this);
     }
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        Events.OnNodeUp.Invoke (this);
+        Events.OnNodeValueUp.Invoke (this);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        Events.OnNodeEnter.Invoke(this);
+        Events.OnNodeValueEnter.Invoke(this);
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        Events.OnNodeExit.Invoke(this);
+        Events.OnNodeValueExit.Invoke(this);
     }
 
     public void ScaleUp()
@@ -170,10 +181,10 @@ public class NodeValue : MonoBehaviour,
 
             if(isToDestroy)
             {
-                Events.OnNodeOnDestroyPosition.Invoke(this);
+                Events.OnNodeValueOnDestroyPosition.Invoke(this);
             }
 
-            Events.OnNodeFinishedMoving.Invoke(this);
+            Events.OnNodeValueFinishedMoving.Invoke(this);
         }
     }
 

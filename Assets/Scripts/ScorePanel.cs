@@ -12,7 +12,7 @@ public class ScorePanel : MonoBehaviour
 
     public void SetScore(int score)
     {
-        this.score = score;
+        this.score = NodeValue.ClosestTwoPower(score);
     }
 
     private void Update()

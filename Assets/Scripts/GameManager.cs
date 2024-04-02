@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     private DirectedGraph graph;
     private Node[][] grid;
     private List<NodeValue> destroyList;
+    private int destroySum;
 
     private readonly Vector2[] directions =
         {
@@ -53,6 +54,7 @@ public class GameManager : MonoBehaviour
         graph = new DirectedGraph();
         grid = InstatiateNodes();
         destroyList = new List<NodeValue>();
+        destroySum = 0;
 
         AddNeighboursForNodes(grid);
     }
@@ -65,10 +67,10 @@ public class GameManager : MonoBehaviour
         value.name = value.name + "." + spotNode.name; //set readable name
 
         //add listeners
-        value.Events.OnNodeEnter.AddListener(OnNodeEnter);
-        value.Events.OnNodeUp.AddListener(OnNodeValueUp);
-        value.Events.OnNodeDown.AddListener(OnNodeValueDown);
-        value.Events.OnNodeExit.AddListener(OnNodeExit);
+        value.Events.OnNodeValueEnter.AddListener(OnNodeValueEnter);
+        value.Events.OnNodeValueUp.AddListener(OnNodeValueUp);
+        value.Events.OnNodeValueDown.AddListener(OnNodeValueDown);
+        value.Events.OnNodeValueExit.AddListener(OnNodeExit);
      
 
         return value;
@@ -154,17 +156,14 @@ public class GameManager : MonoBehaviour
                     var enteredNodeValue = entered[i];
 
                     destroyList.Add(enteredNodeValue);
-                    enteredNodeValue.Events.OnNodeOnDestroyPosition.AddListener(OnNodeValueDestroyPosition);
+                    enteredNodeValue.Events.OnNodeValueOnDestroyPosition.AddListener(OnNodeValueDestroyPosition);
 
                     //start moving
                     enteredNodeValue.StartDestroyMoving(state.Last.transform);
                 }
-
-                //now just make it through entire grid and move all empty spaces to fill up
-
             }
 
-            //first cleanup
+            //first and previous cleanup
             state.First = null;
             state.Previous = null;
             
@@ -173,7 +172,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void OnNodeEnter(NodeValue value)
+    private void OnNodeValueEnter(NodeValue value)
     {
         if (settings.Debug) { Debug.Log("Node entered", value.gameObject); }
 
@@ -232,8 +231,7 @@ public class GameManager : MonoBehaviour
         var enteredNode = value.GetComponentInParent<Node>();
         enteredNode.Previous = null;
 
-        var lastValue = state.Last.GetComponentInChildren<NodeValue>();
-        lastValue.Value += value.Value;
+        destroySum += value.Value;
         value.Events.RemoveAllListeners();
 
         value.Events.OnNodeValueOnDestroy.AddListener(OnNodeValueOnDestroy);
@@ -253,6 +251,10 @@ public class GameManager : MonoBehaviour
         destroyList.Remove(value);
         if(destroyList.Count == 0)
         {
+            var lastValue = state.Last.GetComponentInChildren<NodeValue>();
+            lastValue.Value += destroySum;
+            destroySum = 0;
+
             StartCoroutine(MoveAndPrepareThoseToSpawn());
         }
     }
