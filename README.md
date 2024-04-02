@@ -4,6 +4,6 @@
 
 My clone of "Connect the pops!" game.
 
-![Gameplay](Images\game.jpg)
+![Gameplay](https://github.com/Ziumper/connect-the-pops-clone/blob/master/Images/game.jpg)
 
 
