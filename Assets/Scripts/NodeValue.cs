@@ -51,7 +51,6 @@ public class NodeValue : MonoBehaviour,
     [SerializeField] private AnimationClip moveAnimation;
     [SerializeField] private List<NodeArrow> nodeArrows;
 
-
     private Animator animator;
     private Dictionary<Vector2, GameObject> arrowsMap = new();
 
@@ -89,17 +88,17 @@ public class NodeValue : MonoBehaviour,
         }
     }
 
-    public static void ToggleCircleIn(int power, Image circleImage)
+    private void ToggleCircleIn(int power, Image circleImage)
     {
         circleImage.gameObject.SetActive(power >= GameManager.Settings.MaxPowerSpliter);
     }
 
-    public static int ClosestTwoPowerRound(int value)
+    private int ClosestTwoPowerRound(int value)
     {
         return (int)Mathf.Pow(2, GetClosesTwoPower(value));
     }
 
-    public static int GetClosesTwoPower(int value)
+    private int GetClosesTwoPower(int value)
     {
         if (value <= 0)
         {
@@ -110,7 +109,7 @@ public class NodeValue : MonoBehaviour,
         return Mathf.FloorToInt(logBase2);
     }
     
-    public static string NodeValueToString(int value)
+    private string NodeValueToString(int value)
     {
         int power = GetClosesTwoPower(value);
         if(power >= GameManager.Settings.MaxPowerSpliter)
