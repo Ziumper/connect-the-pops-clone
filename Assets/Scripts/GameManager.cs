@@ -56,6 +56,8 @@ public class GameManager : MonoBehaviour
         destroyList = new List<NodeValue>();
         destroySum = 0;
 
+        Camera.main.backgroundColor = settings.Template.Background;
+
         AddNeighboursForNodes(grid);
     }
 

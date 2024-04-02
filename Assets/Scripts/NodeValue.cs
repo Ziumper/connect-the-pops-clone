@@ -56,7 +56,6 @@ public class NodeValue : MonoBehaviour,
     private Animator animator;
     private Dictionary<Vector2, GameObject> arrowsMap = new();
 
- 
     private readonly string scaleCondition = "ScaleUp";
     private readonly string moveTrigger = "Move";
 

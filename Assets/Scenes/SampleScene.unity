@@ -191,8 +191,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -1532,7 +1532,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  m_Sprite: {fileID: 21300000, guid: 73b86d0cdf02cbe43bd2d42c3630d968, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1945,7 +1945,7 @@ MonoBehaviour:
         m_Calls:
         - m_Target: {fileID: 2041458698}
           m_TargetAssemblyTypeName: ScorePanel, Assembly-CSharp
-          m_MethodName: SetScore
+          m_MethodName: set_Score
           m_Mode: 0
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -2131,6 +2131,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scoreTex: {fileID: 150563471}
   scoreGameObject: {fileID: 1265527259}
+  colorTemplate: {fileID: 11400000, guid: df87fd9fb6ad18e4e86730baf38d0264, type: 2}
 --- !u!1 &2090046928
 GameObject:
   m_ObjectHideFlags: 0
