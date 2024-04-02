@@ -3698,7 +3698,7 @@ MonoBehaviour:
     Debug: 0
     Template: {fileID: 11400000, guid: df87fd9fb6ad18e4e86730baf38d0264, type: 2}
     PowerSpawnStart: 1
-    PowerSpawnEnd: 1
+    PowerSpawnEnd: 6
   events:
     OnSelectedResultUpdate:
       m_PersistentCalls:
