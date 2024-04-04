@@ -250,6 +250,7 @@ MonoBehaviour:
   circleIn: {fileID: 2241853086682774006}
   target: {fileID: 0}
   moveAnimation: {fileID: 7400000, guid: 20e86e0db5a5f5040bf7cb9c00445daf, type: 2}
+  destroyAnimation: {fileID: 7400000, guid: 5994045666788d4478bb515cc893cec7, type: 2}
   nodeArrows:
   - Image: {fileID: 50070593703287754}
     Direction: {x: -1, y: -1}

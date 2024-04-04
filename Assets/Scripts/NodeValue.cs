@@ -55,7 +55,8 @@ public class NodeValue : MonoBehaviour,
     private Dictionary<Vector2, GameObject> arrowsMap = new();
 
     private readonly string scaleCondition = "ScaleUp";
-    private readonly string moveTrigger = "Move";
+    private readonly string moveCondition = "Move";
+    private readonly string moveToDestroy = "MoveToDestroy";
 
     [Header("Events in NodeValue")]
     public NodeEvents Events;
@@ -207,9 +208,10 @@ public class NodeValue : MonoBehaviour,
             elapsedTime = 0f;
             shouldMove = false;
             initaliPosition = transform.parent.position;
-
-            if(isToDestroy)
+            animator.SetBool(moveCondition, false);
+            if (isToDestroy)
             {
+                animator.SetBool(moveToDestroy, false);
                 Events.OnNodeValueOnDestroyPosition.Invoke(this);
             }
 
@@ -219,13 +221,20 @@ public class NodeValue : MonoBehaviour,
 
     public void StartDestroyMoving(Transform target)
     {
-        StartMovingTowardsTarget(target);
         isToDestroy = true;
+        StartMovingTowardsTarget(target);
     }
 
     public void StartMovingTowardsTarget(Transform target)
     {
-        animator.SetTrigger(moveTrigger);
+        if(isToDestroy)
+        {
+            animator.SetBool(moveToDestroy, true);
+        } else
+        {
+            animator.SetBool(moveCondition, true);
+        }
+        
         this.target = target;
         shouldMove = true;
     }
